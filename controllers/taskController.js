@@ -1,10 +1,17 @@
 var mongoose = require("mongoose");
 require("../models/taskModel");
 Task = mongoose.model("Tasks");
+require("../models/User");
+User = mongoose.model("User");
 
 exports.create = function (req, res) {
-  var new_task = new Task(req.body);
-  // console.log(new_task);
+  console.log(req.body);
+  var new_task = new Task({ code: req.body.code, input: req.body.input });
+  User.findOne({ _id: req.body.uid }, function (err, user) {
+    user.tasks.push(new_task);
+    user.save();
+  });
+
   new_task.save(function (err, task) {
     if (err) res.send(err);
     // console.log(task);
