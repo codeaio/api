@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const passport = require('passport');
+const jwt = require('jsonwebtoken');
+const secret = "teamcodeaio";
 //User module
 const User = require('../models/User');
 // Login Page
@@ -89,12 +91,13 @@ router.post('/register',(req,res) => {
 //Login Hnadler
 router.post('/login',(req,res,next) => {
 
-    passport.authenticate('local', function(err, user, info) {
+    passport.authenticate('local', {session: false}, function(err, user, info) {
       if (err) { return next(err); }
       if (!user) { return res.redirect('/user/login'); }
-      req.logIn(user, function(err) {
+      req.logIn(user, {session: false}, function(err) {
         if (err) { return next(err); }
-        return res.redirect('http://localhost:3001/?uid=' + user._id);
+        const token = jwt.sign(user.toJSON(), secret);
+        return res.json({user, token});
       });
     })(req,res,next);
   
