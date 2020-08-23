@@ -25,6 +25,9 @@ module.exports = function(passport) {
                     // Match PAssword 
                     bcrypt.compare(password,user.password,(err,isMatch) => {
                         if(err) throw err;
+                        if (!user.active) {
+                            return done(null, false, { message: 'Sorry, you must validate email first' });
+                        }
                         if(isMatch)
                         {
                             return done(null,user);

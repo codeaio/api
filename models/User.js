@@ -48,6 +48,8 @@ const UserSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    secretToken: String,
+    active: Boolean,
     date:{
         type: Date,
         default: Date.now
