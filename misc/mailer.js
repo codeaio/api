@@ -1,12 +1,12 @@
-const nodemailer = require('nodemailer');
-const config = require('../config/mailer');
+const nodemailer = require("nodemailer");
+const config = require("../config/mailer");
 
 const transport = nodemailer.createTransport({
-  service: 'Gmail',
+  service: "Gmail",
   auth: {
     user: config.MAILGUN_USER,
-    pass: config.MAILGUN_PASS
-  }
+    pass: config.MAILGUN_PASS,
+  },
 });
 
 module.exports = {
@@ -15,12 +15,12 @@ module.exports = {
       transport.sendMail({ from, subject, to, html }, (err, info) => {
         if (err) {
           console.log(err);
-          console.log("MAIL NOT SEND");  
+          console.log("MAIL NOT SEND");
           reject(err);
         }
         console.log(info);
         resolve(info);
       });
     });
-  }
-}
+  },
+};
