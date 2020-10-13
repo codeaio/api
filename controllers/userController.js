@@ -68,7 +68,7 @@ exports.signup = function (req, res) {
                   Please verify your email by click the following link:
                   <br/>
                   On the following page:
-                  <a href="http://localhost:5000/users/verify">http://localhost:5000/users/verify</a>
+                  <a href="http://localhost:5000/users/verify?token=${secretToken}">http://localhost:5000/users/verify/?token=${secretToken}</a>
                   <br/><br/>
                   Have a pleasant day.`;
 
@@ -122,6 +122,7 @@ exports.signin = function (req, res) {
         }
         const token = jwt.sign(user.toJSON(), secret);
         user = {
+          id: user._id,
           name: user.name,
           email: user.email,
         };

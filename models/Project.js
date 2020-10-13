@@ -11,16 +11,6 @@ const ProjectSchema = new Schema({
     type: Object,
     required: true
   },
-  teamMembers: [
-    {
-      email: {
-        type: String
-      },
-      name: {
-        type: String
-      }
-    }
-  ],
   date: {
     type: Date,
     default: Date.now
