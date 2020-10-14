@@ -12,13 +12,15 @@ router.get(
   "/",
   async (req, res) => {
     try {
-      var payload = jwt.verify(req.body.token, secret);
+      console.log(req.query);
+      var payload = jwt.verify(req.query.token, secret);
       var OWNER = {
         _id: payload._id,
         name: payload.name,
         email: payload.email,
       };
-
+      console.log(payload);
+      console.log(req.body);
       console.log(OWNER);
 
       // Combine with owner projects
