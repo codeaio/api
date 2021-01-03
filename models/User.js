@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 var Schema = mongoose.Schema;
+var Container = require('./Container.js');
 
 var TaskSchema = new Schema({
     email: {
@@ -34,7 +35,6 @@ var TaskSchema = new Schema({
         default: 'pending'
     },
 });
-
 const UserSchema = new mongoose.Schema({
     name:{
         type: String,
@@ -54,7 +54,7 @@ const UserSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
-    tasks: [TaskSchema]
+    container: Container.module.schema
 });
 
 const User = mongoose.model('User',UserSchema);

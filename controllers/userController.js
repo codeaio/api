@@ -1,9 +1,12 @@
+const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const secret = "teamcodeaio";
 const randomstring = require("randomstring");
 const mailer = require("../misc/mailer");
-
+const lxd = require('../misc/lxd');
+Container = mongoose.model("Container")
+;
 exports.get = function (req, res) {
   try {
     var payload = jwt.verify(req.body.token, secret);
@@ -143,9 +146,31 @@ exports.verify = function (req, res) {
       if (user.active) {
         return res.json("already active");
       }
-      user.active = true;
-      user.save();
-      return res.json("validated");
+      lxd.generate("cc"+user.secretToken)
+      .then(data => {
+        console.log(data);
+        var container = new Container({name: "cc"+user.secretToken, password: data.obj.password, ipv4: data.obj['bind-addr']});
+        user.container = container;
+        user.active = true;
+        container.save();
+        user.save();
+
+        const html = `Hi, ${user.name}<br>Here is your password for vscode<br><h2><pre>${data.obj.password}</pre></h2><br>Here is your address for vscode<br><h2><pre>${data.obj['bind-addr']}</pre></h2>`;
+
+        // Send email
+        mailer.sendEmail(
+          "noreply-codeaio@gmail.com",
+          user.email,
+          "New Container credentials",
+          html
+        );
+
+        return res.json("validated");  
+      })
+      .catch(err => {
+        console.log(err);
+        res.json({msg: 'Failed to create new container'});
+      })
     } else {
       return res.json("invalide token");
     }
