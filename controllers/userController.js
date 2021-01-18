@@ -27,6 +27,7 @@ exports.signup = function (req, res) {
   if (!name || !email || !password || !password2) {
     errors.push({ msg: "Please fill in all fields" });
   }
+  
   if (password !== password2) {
     errors.push({ msg: "Password do not match" });
   }
@@ -43,6 +44,7 @@ exports.signup = function (req, res) {
         errors.push({ msg: "Email is already Registered" });
         return res.json({ errors: errors, ok: false });
       } else {
+        // For verification
         const secretToken = randomstring.generate(20);
 
         var active = false;
@@ -146,31 +148,8 @@ exports.verify = function (req, res) {
       if (user.active) {
         return res.json("already active");
       }
-      lxd.generate("cc"+user.secretToken)
-      .then(data => {
-        console.log(data);
-        var container = new Container({name: "cc"+user.secretToken, password: data.obj.password, ipv4: data.obj['bind-addr']});
-        user.container = container;
-        user.active = true;
-        container.save();
-        user.save();
-
-        const html = `Hi, ${user.name}<br>Here is your password for vscode<br><h2><pre>${data.obj.password}</pre></h2><br>Here is your address for vscode<br><h2><pre>${data.obj['bind-addr']}</pre></h2>`;
-
-        // Send email
-        mailer.sendEmail(
-          "noreply-codeaio@gmail.com",
-          user.email,
-          "New Container credentials",
-          html
-        );
-
-        return res.json("validated");  
-      })
-      .catch(err => {
-        console.log(err);
-        res.json({msg: 'Failed to create new container'});
-      })
+      user.active = true;
+      user.save();
     } else {
       return res.json("invalide token");
     }

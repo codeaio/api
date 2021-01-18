@@ -1,5 +1,7 @@
 const jwt = require("jsonwebtoken");
 const Project = require("../models/Project");
+const mailer = require("../misc/mailer");
+const lxd = require('../misc/lxd');
 
 const secret = "teamcodeaio";
 
@@ -37,6 +39,11 @@ exports.getById = (req, res) => {
   Project.findById(id).then(project => res.json(project));
 }
 
+async function createContainer(name, template) {
+  var data = await lxd.generate(name, template);
+  return data;
+}
+
 // @route POST api/projects/create
 exports.create = async (req, res) => {
   var payload = jwt.verify(req.body.token, secret);
@@ -45,13 +52,23 @@ exports.create = async (req, res) => {
     name: payload.name,
     email: payload.email,
   };
-
-  console.log(req.body, OWNER);
+  console.log(req.body);
+  var container = await createContainer(req.body.projectName, req.body.template);
 
   const NEW_PROJECT = await new Project({
     owner: OWNER,
     name: req.body.projectName,
+    container: container.obj,
   });
+  const html = `
+    Password for your new project ${req.body.projectName} is ${container.obj.password}
+  `;
+  mailer.sendEmail(
+    "noreply-codeaio@gmail.com",
+    OWNER.email,
+    "New Container credentials",
+    html
+  );
 
   NEW_PROJECT.save().then(project => res.json(project));
 }

@@ -13,7 +13,17 @@ const httpsAgent = new https.Agent({
 
 axios = axios.create({ httpsAgent });
 
-async function newContainer(name) {
+async function newContainer(name, template) {
+  let alias = "";
+  console.log(template);
+  if (template === "none") {
+    alias = "code-server";
+  } else if (template === "nodejs") {
+    alias += "code-server-nodejs";
+  } else if (template === "java") {
+    alias += "code-server-java";
+  }
+  console.log(alias);
   try {
     var res = await axios.post(API + "/1.0/instances", {
       name: name,
@@ -22,7 +32,7 @@ async function newContainer(name) {
       type: "container",
       source: {
         type: "image",
-        alias: "code-server"
+        alias: alias
       }
     })
     res = await axios.get(API + "/1.0/operations/"+res.data.metadata.id+"/wait");
@@ -97,11 +107,11 @@ async function exec(name, command) {
   }
 }
 
-exports.generate = async function(name) {
+exports.generate = async function(name, template) {
   try {
     console.log("hi");
     var response = {};
-    var resp = await newContainer(name);
+    var resp = await newContainer(name, template);
     console.log(resp.data);
     resp = await start(name);
     console.log(resp.data);
@@ -118,7 +128,8 @@ exports.generate = async function(name) {
     response.obj = obj;
     var config = "bind-addr: " + obj['bind-addr'] + "\nauth: " + obj.auth + "\npassword: " + obj.password + "\ncert: " + obj.cert;
     var up_res = await upload(name, '/root/.config/code-server/config.yaml', config);
-    await exec(name, ['code-server']);
+    await exec(name, ['mkdir', name]);
+    await exec(name, ['code-server', '--auth', 'none']);
     return response;
   } catch(err) {
     throw err;
