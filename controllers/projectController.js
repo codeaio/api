@@ -2,6 +2,8 @@ const jwt = require("jsonwebtoken");
 const Project = require("../models/Project");
 const mailer = require("../misc/mailer");
 const lxd = require('../misc/lxd');
+const fs = require('fs');
+const { execSync } = require("child_process");
 
 const secret = "teamcodeaio";
 
@@ -41,6 +43,7 @@ exports.getById = (req, res) => {
 
 async function createContainer(name, template) {
   var data = await lxd.generate(name, template);
+
   return data;
 }
 
@@ -53,7 +56,7 @@ exports.create = async (req, res) => {
     email: payload.email,
   };
   console.log(req.body);
-  var container = await createContainer(req.body.projectName, req.body.template);
+  var container = await createContainer(req.body.projectName, req.body.template, OWNER._id);
 
   const NEW_PROJECT = await new Project({
     owner: OWNER,
@@ -70,7 +73,55 @@ exports.create = async (req, res) => {
     html
   );
 
-  NEW_PROJECT.save().then(project => res.json(project));
+  NEW_PROJECT.save().then(async project => {
+    
+    Project.find({})
+    .then(async projects => {
+      var projects_location = "";
+
+      projects.forEach(project => {
+        projects_location += `
+          location /container/${project.container["bind-addr"]}/ {
+            proxy_pass http://${project.container["bind-addr"]}:8080/;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection upgrade;
+            proxy_set_header Accept-Encoding gzip;
+          }
+        `;
+      });
+
+      var file = `
+        server {
+          listen 80 default_server;
+          listen [::]:80 default_server;
+        
+          server_name _;
+        
+          location / {
+            proxy_pass http://localhost:3000;
+          }
+        
+          location /api {
+            proxy_pass http://localhost:5000;
+          }
+          ${projects_location}
+        
+          location /phpmyadmin {
+            index index.php;
+          }
+        
+          location ~ \.php$ {
+            include snippets/fastcgi-php.conf;
+            fastcgi_pass unix:/var/run/php/php7.4-fpm.sock;
+          }	
+        }
+      `;
+
+      fs.writeFileSync('/etc/nginx/sites-enabled/default', file);
+      execSync("systemctl reload nginx")
+      res.json(project)
+    })
+  });
 }
 
 // @route PATCH api/projects/update

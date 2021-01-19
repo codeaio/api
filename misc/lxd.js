@@ -22,7 +22,10 @@ async function newContainer(name, template) {
     alias += "code-server-nodejs";
   } else if (template === "java") {
     alias += "code-server-java";
+  } else if (template === "react") {
+    alias += "code-server-react";
   }
+
   console.log(alias);
   try {
     var res = await axios.post(API + "/1.0/instances", {
@@ -93,7 +96,7 @@ async function upload(name, path, text) {
   }
 }
 
-async function exec(name, command) {
+async function execLXD(name, command) {
   try {
     var res = await axios.post(API + "/1.0/instances/"+name+"/exec", { 
       command: command,
@@ -124,12 +127,17 @@ exports.generate = async function(name, template) {
       var t = str.split(": ");
       obj[t[0]] = t[1];
     })
-    obj['bind-addr'] = ip + ":8080";
+    obj['bind-addr'] = ip;
+    console.log(ip);
     response.obj = obj;
-    var config = "bind-addr: " + obj['bind-addr'] + "\nauth: " + obj.auth + "\npassword: " + obj.password + "\ncert: " + obj.cert;
+    var config = "bind-addr: " + obj['bind-addr'] + ":8080" + "\nauth: " + obj.auth + "\npassword: " + obj.password + "\ncert: " + obj.cert;
     var up_res = await upload(name, '/root/.config/code-server/config.yaml', config);
-    await exec(name, ['mkdir', name]);
-    await exec(name, ['code-server', '--auth', 'none']);
+    if (template === "react") {
+      await execLXD(name, ['mv', 'my-app', name]);
+    } else {
+      await execLXD(name, ['mkdir', name]);
+    }
+    await execLXD(name, ['code-server', '--auth', 'none']);
     return response;
   } catch(err) {
     throw err;

@@ -9,8 +9,24 @@ const passport = require('passport');
 var logger = require("morgan");
 var mongoose = require("mongoose");
 var cors = require("cors");
+const { createProxyMiddleware } = require('http-proxy-middleware');
+
 var app = express();
 
+const options = {
+  target: 'http://10.80.123.9:8080',
+  changeOrigin: true,
+  ws: true,
+  pathRewrite: {
+    '^/api/container': '/',
+  },
+  router: {
+  },
+};
+
+const containerProxy = createProxyMiddleware(options);
+
+app.use('/api/container', containerProxy);
 
 app.use(cors({ origin: "*" }));
 app.use(logger("dev"));
@@ -66,11 +82,11 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
-app.use("/", indexRouter);
-app.use("/users", usersRouter);
-app.use("/task", taskRouter);
-app.use("/projects", projects);
-app.use("/containers", containers);
+app.use("/api/", indexRouter);
+app.use("/api/users", usersRouter);
+app.use("/api/task", taskRouter);
+app.use("/api/projects", projects);
+app.use("/api/containers", containers);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

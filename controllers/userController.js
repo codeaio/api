@@ -73,7 +73,7 @@ exports.signup = function (req, res) {
                   Please verify your email by click the following link:
                   <br/>
                   On the following page:
-                  <a href="http://localhost:5000/users/verify?token=${secretToken}">http://localhost:5000/users/verify/?token=${secretToken}</a>
+                  <a href="http://localhost/api/users/verify?token=${secretToken}">https://white-stingray-58.loca.lt/api/users/verify/?token=${secretToken}</a>
                   <br/><br/>
                   Have a pleasant day.`;
 
@@ -150,6 +150,7 @@ exports.verify = function (req, res) {
       }
       user.active = true;
       user.save();
+      res.json("validated");
     } else {
       return res.json("invalide token");
     }

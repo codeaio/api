@@ -27,5 +27,8 @@
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0",
     "randomstring": "^1.1.5"
+  },
+  "devDependencies": {
+    "http-proxy-middleware": "^1.0.6"
   }
 }
